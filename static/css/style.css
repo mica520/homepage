@@ -642,17 +642,21 @@ footer {
     }
 
     .a .projectItemRight {
-        display: none;
-
+        display: flex;
+        width: 28%;
     }
 
     .a .projectItemRight img {
-        display: none;
-
+        display: block;
     }
 
     .a .projectItemLeft {
-        width: 100%;
+        width: 72%;
+    }
+
+    .a .projectItemRight img {
+        height: 28px;
+        width: 28px;
     }
 
     .a {
