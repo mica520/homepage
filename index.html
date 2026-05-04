@@ -141,6 +141,25 @@
 				<div class="tanChiShe">
 					<img id="tanChiShe" src="./static/svg/snake-Light.svg" alt="">
 				</div>
+
+				<div class="searchBox">
+					<div class="searchEngine" id="searchEngine" tabindex="0">
+						<img id="searchEngineIcon" src="https://www.bing.com/favicon.ico" alt="">
+						<span id="searchEngineName">Bing</span>
+						<svg class="searchArrow" viewBox="0 0 1024 1024"><path d="M512 714.666667c-8.533333 0-17.066667-2.133333-23.466667-8.533334l-256-256c-12.8-12.8-10.666667-34.133333 2.133334-46.933333 12.8-12.8 34.133333-10.666667 46.933333 2.133333L512 636.8l230.4-230.4c12.8-12.8 34.133333-12.8 46.933333 0 12.8 12.8 12.8 34.133333 0 46.933334l-256 256c-6.4 8.533333-14.933333 8.533333-21.333333 8.533333z" fill="currentColor"></path></svg>
+						<div class="searchEngineDropdown" id="searchEngineDropdown">
+							<div class="searchEngineOption active" data-engine="bing" data-icon="https://www.bing.com/favicon.ico" data-url="https://www.bing.com/search?q="><img src="https://www.bing.com/favicon.ico" alt="">Bing</div>
+							<div class="searchEngineOption" data-engine="google" data-icon="https://www.google.com/favicon.ico" data-url="https://www.google.com/search?q="><img src="https://www.google.com/favicon.ico" alt="">Google</div>
+							<div class="searchEngineOption" data-engine="bilibili" data-icon="https://www.bilibili.com/favicon.ico" data-url="https://search.bilibili.com/all?keyword="><img src="https://www.bilibili.com/favicon.ico" alt="">Bilibili</div>
+							<div class="searchEngineOption" data-engine="jd" data-icon="https://www.jd.com/favicon.ico" data-url="https://search.jd.com/Search?keyword="><img src="https://www.jd.com/favicon.ico" alt="">京东</div>
+							<div class="searchEngineOption" data-engine="taobao" data-icon="https://www.taobao.com/favicon.ico" data-url="https://s.taobao.com/search?q="><img src="https://www.taobao.com/favicon.ico" alt="">淘宝</div>
+						</div>
+					</div>
+					<input type="text" class="searchInput" id="searchInput" placeholder="输入关键词搜索..." autocomplete="off">
+					<button class="searchBtn" id="searchBtn">
+						<svg viewBox="0 0 1024 1024"><path d="M1014.570667 960.512L747.861333 693.845333A424.405333 424.405333 0 0 0 853.333333 426.666667C853.333333 191.018667 662.314667 0 426.666667 0S0 191.018667 0 426.666667s191.018667 426.666667 426.666667 426.666667a424.405333 424.405333 0 0 0 267.178666-105.472L960.512 1014.570667a25.514667 25.514667 0 0 0 36.181334 1.024l17.834666-17.877334a25.6 25.6 0 0 0 0-37.205333zM426.666667 768C238.005333 768 85.333333 615.338667 85.333333 426.666667S238.005333 85.333333 426.666667 85.333333 768 238.005333 768 426.666667 615.338667 768 426.666667 768z" fill="currentColor"></path></svg>
+					</button>
+				</div>
 			</header>
 
 

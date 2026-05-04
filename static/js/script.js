@@ -1,5 +1,5 @@
-console.log('%cCopyright © 2024 mica.net',
-    'background-color: #ff00ff; color: white; font-size: 24px; font-weight: bold; padding: 10px;'
+console.log('%cCopyright © 2024 yozz.net and 2026 mica',
+    'background-color: #37229f; color: white; font-size: 24px; font-weight: bold; padding: 10px;'
 );
 console.log('%c   /\\_/\\', 'color: #8B4513; font-size: 20px;');
 console.log('%c  ( o.o )', 'color: #8B4513; font-size: 20px;');
@@ -216,6 +216,71 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
+
+// ===== 搜索引擎 =====
+(function() {
+    var engineBtn = document.getElementById('searchEngine');
+    var engineIcon = document.getElementById('searchEngineIcon');
+    var engineName = document.getElementById('searchEngineName');
+    var dropdown = document.getElementById('searchEngineDropdown');
+    var options = dropdown.querySelectorAll('.searchEngineOption');
+    var searchInput = document.getElementById('searchInput');
+    var searchBtn = document.getElementById('searchBtn');
+
+    // 默认选中 Bing（修改 HTML 中初始 active 类）
+    var activeOption = dropdown.querySelector('.searchEngineOption[data-engine="bing"]');
+    if (activeOption) {
+        activeOption.classList.add('active');
+        engineIcon.src = activeOption.dataset.icon;
+        engineName.textContent = activeOption.dataset.engine === 'bilibili' ? 'Bilibili' : activeOption.textContent.trim();
+    }
+
+    // 点击引擎区域展开/收起下拉
+    engineBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        engineBtn.classList.toggle('open');
+    });
+
+    // 选择引擎
+    options.forEach(function(opt) {
+        opt.addEventListener('click', function(e) {
+            e.stopPropagation();
+            // 移除所有 active
+            options.forEach(function(o) { o.classList.remove('active'); });
+            // 设置当前选中
+            opt.classList.add('active');
+            engineIcon.src = opt.dataset.icon;
+            engineName.textContent = opt.dataset.engine === 'bilibili' ? 'Bilibili' : opt.textContent.trim();
+            // 关闭下拉
+            engineBtn.classList.remove('open');
+        });
+    });
+
+    // 点击其他区域关闭下拉
+    document.addEventListener('click', function() {
+        engineBtn.classList.remove('open');
+    });
+
+    // 回车搜索
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            doSearch();
+        }
+    });
+
+    // 点击搜索按钮
+    searchBtn.addEventListener('click', function() {
+        doSearch();
+    });
+
+    function doSearch() {
+        var query = searchInput.value.trim();
+        if (!query) return;
+        var active = dropdown.querySelector('.searchEngineOption.active');
+        var url = active ? active.dataset.url : 'https://www.bing.com/search?q=';
+        window.open(url + encodeURIComponent(query), '_blank');
+    }
+})();
 
 var pageLoading = document.querySelector("#mica-loading");
 window.addEventListener('load', function() {
