@@ -302,6 +302,10 @@ body {
     padding-bottom: 50px;
     flex-direction: column;
 }
+header {
+    position: relative;
+    z-index: 10;
+}
 .welcome {
 
     font-size: 65px;
