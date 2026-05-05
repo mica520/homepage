@@ -57,6 +57,41 @@
 				</div>
 				<div class="left-tag-item">骑行</div>
 			</div>
+			<div class="left-div left-music">
+				<div class="music-cover" id="musicCoverWrap">
+					<img id="musicCover" src="./static/img/favicon.svg" alt="cover">
+					<div class="music-cover-play" id="musicCoverPlay">
+						<svg viewBox="0 0 1024 1024"><path d="M256 170.666667v682.666666l512-341.333333L256 170.666667z" fill="currentColor"></path></svg>
+					</div>
+				</div>
+				<div class="music-info">
+					<div class="music-title" id="musicTitle">未在播放</div>
+					<div class="music-artist" id="musicArtist">点击播放</div>
+				</div>
+				<div class="music-controls">
+					<button class="music-btn" id="musicPrev" aria-label="上一首">
+						<svg viewBox="0 0 1024 1024"><path d="M256 512h85.333333v256H256V512z m597.333333 256h-85.333333V298.666667L341.333333 512 768 725.333333V768z" fill="currentColor"></path></svg>
+					</button>
+					<button class="music-btn music-btn-play" id="musicPlay" aria-label="播放">
+						<svg viewBox="0 0 1024 1024"><path d="M256 170.666667v682.666666l512-341.333333L256 170.666667z" fill="currentColor"></path></svg>
+					</button>
+					<button class="music-btn" id="musicNext" aria-label="下一首">
+						<svg viewBox="0 0 1024 1024"><path d="M256 256h85.333333v512H256V256z m597.333333 256L341.333333 298.666667v426.666666L853.333333 512z" fill="currentColor"></path></svg>
+					</button>
+				</div>
+				<div class="music-progress">
+					<span class="music-time" id="musicCurTime">00:00</span>
+					<input type="range" class="music-progress-bar" id="musicProgress" min="0" max="100" value="0">
+					<span class="music-time" id="musicDurTime">00:00</span>
+				</div>
+				<div class="music-lyrics" id="musicLyrics">
+					<p class="lyric-line lrc-prev2"></p>
+					<p class="lyric-line lrc-prev1"></p>
+					<p class="lyric-line lrc-current">♪ 暂无歌词 ♪</p>
+					<p class="lyric-line lrc-next1"></p>
+					<p class="lyric-line lrc-next2"></p>
+				</div>
+			</div>
 			<div class="left-div left-time">
 				<ul id="line">
 					<li>
@@ -73,7 +108,7 @@
 					</li>
 					<li>
 						<div class="focus"></div>
-						<div>注册域名mica.space
+						<div>注册域名mica520.space
 						</div>
 						<div>2026.04</div>
 					</li>
@@ -207,14 +242,6 @@
 							<img src="https://1p.267073.xyz/public/favicon.png" alt="">
 						</div>
 
-					</a><a class="projectItem a" target="_blank" href="https://music.mica520.space">
-						<div class="projectItemLeft">
-							<h1>音乐</h1>
-							<p>我不能没有它！</p>
-						</div>
-						<div class="projectItemRight">
-							<img src="https://music.mica520.space/favicon.svg" alt="">
-						</div>
 
 					</a><a class="projectItem a" target="_blank" href="https://cat.267073.xyz">
 						<div class="projectItemLeft">
@@ -430,6 +457,7 @@
 	</div>
 </body>
 <script src="./static/js/script.js"> </script>
+	<script src="./static/js/music.js"> </script>
 
 
 
