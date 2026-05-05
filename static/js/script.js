@@ -227,11 +227,24 @@ document.addEventListener('DOMContentLoaded', function () {
     var searchInput = document.getElementById('searchInput');
     var searchBtn = document.getElementById('searchBtn');
 
-    // 默认选中 Bing（修改 HTML 中初始 active 类）
+    // 预加载所有搜索引擎图标，确保浏览器缓存
+    options.forEach(function(opt) {
+        var iconUrl = opt.dataset.icon;
+        if (iconUrl) {
+            var preloadImg = new Image();
+            preloadImg.src = iconUrl;
+        }
+    });
+
+    // 缓存当前图标 URL，避免重复设置相同 src
+    var currentIconUrl = '';
+
+    // 默认选中 Bing
     var activeOption = dropdown.querySelector('.searchEngineOption[data-engine="bing"]');
     if (activeOption) {
         activeOption.classList.add('active');
-        engineIcon.src = activeOption.dataset.icon;
+        currentIconUrl = activeOption.dataset.icon;
+        engineIcon.src = currentIconUrl;
         engineName.textContent = activeOption.dataset.engine === 'bilibili' ? 'Bilibili' : activeOption.textContent.trim();
     }
 
@@ -249,7 +262,12 @@ document.addEventListener('DOMContentLoaded', function () {
             options.forEach(function(o) { o.classList.remove('active'); });
             // 设置当前选中
             opt.classList.add('active');
-            engineIcon.src = opt.dataset.icon;
+            // 仅在图标 URL 变化时才更新 src，避免重新发起网络请求
+            var newIconUrl = opt.dataset.icon;
+            if (newIconUrl !== currentIconUrl) {
+                engineIcon.src = newIconUrl;
+                currentIconUrl = newIconUrl;
+            }
             engineName.textContent = opt.dataset.engine === 'bilibili' ? 'Bilibili' : opt.textContent.trim();
             // 关闭下拉
             engineBtn.classList.remove('open');
