@@ -4,7 +4,7 @@
   // ===== MetingJS 配置 =====
   // 网易云歌单 ID (可在 URL 中获取，例如 https://music.163.com/#/playlist?id=7551548790)
   var PLAYLIST_ID = '13115764922';
-  var METING_API = 'https://api.injahow.cn/meting/?type=playlist&id=' + PLAYLIST_ID + '&server=netease';
+  var METING_API = 'https://meting.jinghuashang.cn/?type=playlist&id=' + PLAYLIST_ID + '&server=netease';
 
   // ===== DOM =====
   var coverWrap = document.getElementById('musicCoverWrap');
@@ -81,6 +81,20 @@
         }
         throw new Error('无法获取播放地址');
       });
+  }
+
+  // ===== 通过 API 获取歌词文本 =====
+  function fetchLyric(trackId) {
+    var apiUrl = 'https://music-api.gdstudio.xyz/api.php?types=lyric&source=netease&id=' + trackId;
+    return fetch(apiUrl)
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (data && data.lyric) {
+          return data.lyric;
+        }
+        return '';
+      })
+      .catch(function () { return ''; });
   }
 
   // ===== 加载歌曲 =====
