@@ -289,3 +289,67 @@ window.addEventListener('load', function() {
     }, 100);
 });
 
+// ===== 移动端侧边栏抽屉 =====
+(function() {
+    var toggleBtn = document.getElementById('sidebarToggle');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebarOverlay');
+
+    if (!toggleBtn || !sidebar || !overlay) return;
+
+    function openSidebar() {
+        sidebar.classList.add('open');
+        overlay.classList.add('open');
+        toggleBtn.setAttribute('aria-label', '关闭侧边栏');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('open');
+        toggleBtn.setAttribute('aria-label', '打开侧边栏');
+        document.body.style.overflow = '';
+    }
+
+    toggleBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (sidebar.classList.contains('open')) {
+            closeSidebar();
+        } else {
+            openSidebar();
+        }
+    });
+
+    overlay.addEventListener('click', function() {
+        closeSidebar();
+    });
+
+    // 在侧边栏内点击链接后自动关闭
+    sidebar.addEventListener('click', function(e) {
+        if (e.target.closest('a')) {
+            // 给一点延迟让链接跳转生效
+            setTimeout(function() {
+                closeSidebar();
+            }, 150);
+        }
+    });
+
+    // 手势滑动关闭（左滑）
+    var touchStartX = 0;
+    var touchStartY = 0;
+
+    sidebar.addEventListener('touchstart', function(e) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    sidebar.addEventListener('touchmove', function(e) {
+        var deltaX = e.touches[0].clientX - touchStartX;
+        var deltaY = e.touches[0].clientY - touchStartY;
+        // 只有水平滑动大于垂直滑动，并且向左滑超过 60px 才关闭
+        if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX < -60) {
+            closeSidebar();
+        }
+    }, { passive: true });
+})();
+

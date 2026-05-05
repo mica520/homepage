@@ -23,8 +23,16 @@
 	</div>
 	<div class="mica-filter"></div>
 
+	<!-- 移动端汉堡菜单按钮 -->
+	<button class="sidebar-toggle" id="sidebarToggle" aria-label="打开侧边栏">
+		<svg viewBox="0 0 24 24" width="24" height="24">
+			<path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" fill="currentColor"/>
+		</svg>
+	</button>
+	<!-- 侧边栏遮罩 -->
+	<div class="sidebar-overlay" id="sidebarOverlay"></div>
 	<div class="mica-main">
-		<div class="mica-left">
+		<div class="mica-left" id="sidebar">
 			<div class="logo" style="background-image: url(https://cdn.jsdmirror.com/gh/mica520/mica520.github.io/images/avator.jpg);">
 				<img style="position: absolute;top:-15%;left:-10%;width: 120%; aspect-ratio: 1/1;"
 					src="./static/img/logokuang.png">
