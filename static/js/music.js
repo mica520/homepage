@@ -50,7 +50,7 @@
               lrc: item.lrc || item.lyric || '',
             };
           });
-          currentIndex = 0;
+          currentIndex = getRandomIndex(-1);
           loadSong(currentIndex);
         }
       })
@@ -135,15 +135,8 @@
       return;
     }
 
-    // 歌词获取：如果 lrc 是 URL，需要先 fetch
-    var lrcPromise;
-    if (/^https?:\/\//.test(song.lrc)) {
-      lrcPromise = fetch(song.lrc).then(function (res) { return res.text(); });
-    } else {
-      lrcPromise = Promise.resolve(song.lrc || '');
-    }
-
-    Promise.all([fetchTrackUrl(song.id), lrcPromise]).then(function (results) {
+    // 歌词通过 API 获取
+    Promise.all([fetchTrackUrl(song.id), fetchLyric(song.id)]).then(function (results) {
       var realUrl = results[0];
       var realLrc = results[1];
       // 更新歌曲对象中的歌词为真实文本
@@ -164,8 +157,10 @@
         }
         if (curTimeEl) curTimeEl.textContent = formatTime(audio.currentTime);
 
-        // 歌词匹配
-        updateLyric(audio.currentTime);
+        // 歌词匹配（拖动期间暂停，避免重复请求）
+        if (!isDragging) {
+          updateLyric(audio.currentTime);
+        }
       });
 
       audio.addEventListener('ended', function () {
@@ -234,9 +229,18 @@
     loadSong(currentIndex);
   }
 
+  function getRandomIndex(excludeIndex) {
+    if (playlist.length === 1) return 0;
+    var idx;
+    do {
+      idx = Math.floor(Math.random() * playlist.length);
+    } while (idx === excludeIndex);
+    return idx;
+  }
+
   function nextSong() {
     if (!playlist.length) return;
-    currentIndex = (currentIndex + 1) % playlist.length;
+    currentIndex = getRandomIndex(currentIndex);
     loadSong(currentIndex);
   }
 
@@ -245,18 +249,23 @@
     if (!audio || !audio.duration) return;
     var time = (value / 1000) * audio.duration;
     audio.currentTime = time;
+    // 拖动时立即同步歌词位置
+    if (isDragging) {
+      updateLyric(time);
+    }
   }
 
   // ===== 歌词解析 =====
   // 存储解析后的歌词行
   var parsedLines = [];
   var lastIdx = -1;
+  var lastLrcText = '';   // 缓存原始歌词文本，避免重复解析
+  var fadeTimers = [];    // 渐隐渐显定时器
 
   function updateLyric(currentTime) {
     if (!lyricLines.length || !playlist[currentIndex]) return;
     var lrc = playlist[currentIndex].lrc || '';
     if (!lrc) {
-      // 无歌词时保留中间行默认文字，其余行清空
       for (var i = 0; i < lyricLines.length; i++) {
         if (i !== 2 && lyricLines[i]) lyricLines[i].textContent = '';
       }
@@ -266,11 +275,15 @@
       }
       parsedLines = [];
       lastIdx = -1;
+      lastLrcText = '';
       return;
     }
-    parsedLines = parseLrc(lrc);
+    // 歌词文本未变化则复用已解析结果（缓存）
+    if (lrc !== lastLrcText) {
+      parsedLines = parseLrc(lrc);
+      lastLrcText = lrc;
+    }
     if (!parsedLines.length) {
-      // 解析后无有效歌词行，保留中间行默认文字
       for (var i = 0; i < lyricLines.length; i++) {
         if (i !== 2 && lyricLines[i]) lyricLines[i].textContent = '';
       }
@@ -278,7 +291,6 @@
         lyricLines[2].textContent = '♪ 暂无歌词 ♪';
         lyricLines[2].className = lyricLines[2].className.replace(/\s*lrc-empty/g, '');
       }
-      parsedLines = [];
       lastIdx = -1;
       return;
     }
@@ -293,33 +305,52 @@
     if (idx === lastIdx) return;
     lastIdx = idx;
 
-    // 填充 5 行歌词
-    setLyricLine(0, idx - 2); // prev2
-    setLyricLine(1, idx - 1); // prev1
-    setLyricLine(2, idx);     // current
-    setLyricLine(3, idx + 1); // next1
-    setLyricLine(4, idx + 2); // next2
+    // 清除之前的渐隐定时器
+    for (var t = 0; t < fadeTimers.length; t++) {
+      clearTimeout(fadeTimers[t]);
+    }
+    fadeTimers = [];
+
+    // 先将所有行设为渐隐（lrc-empty 状态）
+    for (var s = 0; s < lyricLines.length; s++) {
+      if (lyricLines[s]) {
+        lyricLines[s].className = lyricLines[s].className.replace(/\s*lrc-empty/g, '') + ' lrc-empty';
+      }
+    }
+
+    // 延迟后更新文字并渐显
+    fadeTimers.push(setTimeout(function () {
+      setLyricLineText(0, idx - 2); // prev2
+      setLyricLineText(1, idx - 1); // prev1
+      setLyricLineText(2, idx);     // current
+      setLyricLineText(3, idx + 1); // next1
+      setLyricLineText(4, idx + 2); // next2
+    }, 200));
   }
 
-  function setLyricLine(slot, lineIdx) {
+  function setLyricLineText(slot, lineIdx) {
     var el = lyricLines[slot];
     if (!el) return;
     if (lineIdx >= 0 && lineIdx < parsedLines.length) {
       el.textContent = parsedLines[lineIdx].text || '';
-      // 恢复原始类名
       el.className = el.className.replace(/\s*lrc-empty/g, '');
     } else {
       el.textContent = '';
-      el.className += ' lrc-empty';
+      // lrc-empty 已在统一渐隐时设置，无需再追加
     }
   }
 
   function clearLyricLines() {
+    for (var i = 0; i < fadeTimers.length; i++) {
+      clearTimeout(fadeTimers[i]);
+    }
+    fadeTimers = [];
     for (var i = 0; i < lyricLines.length; i++) {
       if (lyricLines[i]) lyricLines[i].textContent = '';
     }
     parsedLines = [];
     lastIdx = -1;
+    lastLrcText = '';
   }
 
   function parseLrc(lrc) {
