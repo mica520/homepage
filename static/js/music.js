@@ -2,7 +2,6 @@
   'use strict';
 
   // ===== MetingJS 配置 =====
-  // 网易云歌单 ID (可在 URL 中获取，例如 https://music.163.com/#/playlist?id=7551548790)
   var PLAYLIST_ID = '13115764922';
   var METING_API = 'https://meting.jinghuashang.cn/?type=playlist&id=' + PLAYLIST_ID + '&server=netease';
 
@@ -17,8 +16,8 @@
   var progressBar = document.getElementById('musicProgress');
   var curTimeEl = document.getElementById('musicCurTime');
   var durTimeEl = document.getElementById('musicDurTime');
-  // 5 行歌词行: prev2, prev1, current, next1, next2
-  var lyricLines = [];
+  var lrcStage = document.getElementById('lrcStage');
+  var lrcLines = [null, null, null];
 
   // ===== 状态 =====
   var playlist = [];
@@ -30,6 +29,11 @@
   // ===== 初始化 =====
   function init() {
     if (!coverWrap) return;
+    if (lrcStage) {
+      lrcLines[0] = lrcStage.querySelector('.lrc-line-0');
+      lrcLines[1] = lrcStage.querySelector('.lrc-line-1');
+      lrcLines[2] = lrcStage.querySelector('.lrc-line-2');
+    }
     fetchPlaylist();
   }
 
@@ -40,7 +44,6 @@
       .then(function (data) {
         if (Array.isArray(data) && data.length > 0) {
           playlist = data.map(function (item) {
-            // 从 url 中提取歌曲 id
             var trackId = extractTrackId(item.url, item);
             return {
               title: item.name || item.title || '未知歌曲',
@@ -59,39 +62,30 @@
       });
   }
 
-  // ===== 从 url 中提取歌曲 id =====
   function extractTrackId(url, item) {
-    // 尝试从 url 中匹配 id=数字 的格式 (如 music.163.com/song/media/outer/url?id=XXXXX)
     var match = url && url.match(/[?&]id=(\d+)/);
     if (match) return match[1];
-    // 回退: 使用 meting 返回的 id 字段
     if (item.id) return String(item.id);
     if (item.song_id) return String(item.song_id);
     return '';
   }
 
-  // ===== 获取歌曲真实播放 url =====
   function fetchTrackUrl(trackId) {
     var apiUrl = 'https://music-api.gdstudio.xyz/api.php?types=url&source=netease&id=' + trackId + '&br=740';
     return fetch(apiUrl)
       .then(function (res) { return res.json(); })
       .then(function (data) {
-        if (data && data.url) {
-          return data.url;
-        }
+        if (data && data.url) return data.url;
         throw new Error('无法获取播放地址');
       });
   }
 
-  // ===== 通过 API 获取歌词文本 =====
   function fetchLyric(trackId) {
     var apiUrl = 'https://music-api.gdstudio.xyz/api.php?types=lyric&source=netease&id=' + trackId;
     return fetch(apiUrl)
       .then(function (res) { return res.json(); })
       .then(function (data) {
-        if (data && data.lyric) {
-          return data.lyric;
-        }
+        if (data && data.lyric) return data.lyric;
         return '';
       })
       .catch(function () { return ''; });
@@ -103,46 +97,34 @@
     var song = playlist[index];
     if (!song) return;
 
-    // 停止当前
     if (audio) {
       audio.pause();
       audio = null;
     }
 
-    // 更新 UI
     if (coverImg) coverImg.src = song.cover;
     if (titleEl) titleEl.textContent = song.title;
     if (artistEl) artistEl.textContent = song.artist;
     if (progressBar) progressBar.value = 0;
     if (curTimeEl) curTimeEl.textContent = '00:00';
     if (durTimeEl) durTimeEl.textContent = '00:00';
-    // 重置歌词行: 中间行显示默认文字，其余清空
     clearLyricLines();
-    if (lyricLines[2]) {
-      lyricLines[2].textContent = '♪ 暂无歌词 ♪';
-      lyricLines[2].className = lyricLines[2].className.replace(/\s*lrc-empty/g, '');
-    }
+    showNoLyric();
 
-    // 更新封面动画
     if (coverWrap) {
       coverWrap.classList.remove('playing', 'paused');
     }
 
-    // 通过 API 获取真实播放地址
     if (!song.id) {
-      // 没有 id，跳到下一首
       setTimeout(function () { nextSong(); }, 500);
       return;
     }
 
-    // 歌词通过 API 获取
     Promise.all([fetchTrackUrl(song.id), fetchLyric(song.id)]).then(function (results) {
       var realUrl = results[0];
       var realLrc = results[1];
-      // 更新歌曲对象中的歌词为真实文本
       song.lrc = realLrc;
 
-      // 创建 audio 使用真实 url
       audio = new Audio(realUrl);
       audio.volume = 0.65;
 
@@ -156,8 +138,6 @@
           progressBar.value = pct;
         }
         if (curTimeEl) curTimeEl.textContent = formatTime(audio.currentTime);
-
-        // 歌词匹配（拖动期间暂停，避免重复请求）
         if (!isDragging) {
           updateLyric(audio.currentTime);
         }
@@ -168,7 +148,6 @@
       });
 
       audio.addEventListener('error', function () {
-        // 某些歌曲可能 URL 失效，跳到下一首
         setTimeout(function () { nextSong(); }, 500);
       });
 
@@ -176,15 +155,11 @@
         audio.play().then(function () {
           isPlaying = true;
           updatePlayState();
-        }).catch(function () {
-          // 自动播放被阻止
-        });
+        }).catch(function () {});
       });
 
-      // 加载音频
       audio.load();
     }).catch(function () {
-      // API 获取失败，跳到下一首
       setTimeout(function () { nextSong(); }, 500);
     });
   }
@@ -217,7 +192,6 @@
       coverWrap.classList.add('playing');
       coverWrap.classList.remove('paused');
     } else {
-      // 暂停时保留 playing 类（维持动画定义），同时添加 paused 类（暂停动画）
       coverWrap.classList.add('playing', 'paused');
     }
   }
@@ -249,104 +223,168 @@
     if (!audio || !audio.duration) return;
     var time = (value / 1000) * audio.duration;
     audio.currentTime = time;
-    // 拖动时立即同步歌词位置
     if (isDragging) {
       updateLyric(time);
     }
   }
 
   // ===== 歌词解析 =====
-  // 存储解析后的歌词行
   var parsedLines = [];
   var lastIdx = -1;
-  var lastLrcText = '';   // 缓存原始歌词文本，避免重复解析
-  var fadeTimers = [];    // 渐隐渐显定时器
+  var lastLrcText = '';
+  var scrollTimer = null;
+  var fadeTimer = null;
+
+  var LINE_HEIGHT = 21;
 
   function updateLyric(currentTime) {
-    if (!lyricLines.length || !playlist[currentIndex]) return;
+    if (!lrcStage || !lrcLines[0] || !playlist[currentIndex]) return;
     var lrc = playlist[currentIndex].lrc || '';
     if (!lrc) {
-      for (var i = 0; i < lyricLines.length; i++) {
-        if (i !== 2 && lyricLines[i]) lyricLines[i].textContent = '';
-      }
-      if (lyricLines[2]) {
-        lyricLines[2].textContent = '♪ 暂无歌词 ♪';
-        lyricLines[2].className = lyricLines[2].className.replace(/\s*lrc-empty/g, '');
-      }
+      showNoLyric();
       parsedLines = [];
       lastIdx = -1;
       lastLrcText = '';
       return;
     }
-    // 歌词文本未变化则复用已解析结果（缓存）
     if (lrc !== lastLrcText) {
       parsedLines = parseLrc(lrc);
       lastLrcText = lrc;
     }
     if (!parsedLines.length) {
-      for (var i = 0; i < lyricLines.length; i++) {
-        if (i !== 2 && lyricLines[i]) lyricLines[i].textContent = '';
-      }
-      if (lyricLines[2]) {
-        lyricLines[2].textContent = '♪ 暂无歌词 ♪';
-        lyricLines[2].className = lyricLines[2].className.replace(/\s*lrc-empty/g, '');
-      }
+      showNoLyric();
       lastIdx = -1;
       return;
     }
 
-    // 找到当前时间对应的歌词索引
     var idx = 0;
     for (var i = 0; i < parsedLines.length; i++) {
       if (parsedLines[i].time <= currentTime) idx = i;
     }
 
-    // 索引没变化则无需更新
     if (idx === lastIdx) return;
+
+    var direction = 0;
+    if (lastIdx >= 0) {
+      direction = idx > lastIdx ? 1 : -1;
+    }
     lastIdx = idx;
 
-    // 清除之前的渐隐定时器
-    for (var t = 0; t < fadeTimers.length; t++) {
-      clearTimeout(fadeTimers[t]);
-    }
-    fadeTimers = [];
+    var prevText = idx > 0 ? parsedLines[idx - 1].text : '';
+    var currText = parsedLines[idx].text || '';
+    var nextText = idx + 1 < parsedLines.length ? parsedLines[idx + 1].text : '';
 
-    // 先将所有行设为渐隐（lrc-empty 状态）
-    for (var s = 0; s < lyricLines.length; s++) {
-      if (lyricLines[s]) {
-        lyricLines[s].className = lyricLines[s].className.replace(/\s*lrc-empty/g, '') + ' lrc-empty';
-      }
-    }
-
-    // 延迟后更新文字并渐显
-    fadeTimers.push(setTimeout(function () {
-      setLyricLineText(0, idx - 2); // prev2
-      setLyricLineText(1, idx - 1); // prev1
-      setLyricLineText(2, idx);     // current
-      setLyricLineText(3, idx + 1); // next1
-      setLyricLineText(4, idx + 2); // next2
-    }, 200));
+    setThreeLines(prevText, currText, nextText, direction);
   }
 
-  function setLyricLineText(slot, lineIdx) {
-    var el = lyricLines[slot];
-    if (!el) return;
-    if (lineIdx >= 0 && lineIdx < parsedLines.length) {
-      el.textContent = parsedLines[lineIdx].text || '';
-      el.className = el.className.replace(/\s*lrc-empty/g, '');
-    } else {
-      el.textContent = '';
-      // lrc-empty 已在统一渐隐时设置，无需再追加
+  // direction: 1=前进, -1=后退, 0=无动画(初始)
+  function setThreeLines(prevText, currText, nextText, direction) {
+    if (!lrcStage || !lrcLines[0]) return;
+
+    // 清除之前的定时器
+    if (scrollTimer) {
+      clearTimeout(scrollTimer);
+      scrollTimer = null;
     }
+    if (fadeTimer) {
+      clearTimeout(fadeTimer);
+      fadeTimer = null;
+    }
+
+    // 确保中间行高亮类存在(用于后续淡入)
+    var hadCurrent = lrcLines[1].classList.contains('lrc-current');
+
+    if (direction === 0) {
+      // 无动画：直接设置文字
+      lrcStage.style.transition = 'none';
+      lrcStage.style.transform = 'translateY(0)';
+      lrcLines[0].textContent = prevText;
+      lrcLines[1].textContent = currText;
+      lrcLines[2].textContent = nextText;
+      lrcLines[0].classList.remove('lrc-current');
+      lrcLines[2].classList.remove('lrc-current');
+      lrcLines[1].classList.add('lrc-current');
+      return;
+    }
+
+    // 第一步：淡出旧歌词 — 移除高亮，旧行逐渐变浅
+    lrcLines[0].classList.remove('lrc-current');
+    lrcLines[1].classList.remove('lrc-current');
+    lrcLines[2].classList.remove('lrc-current');
+
+    // 动画偏移量
+    var offset = direction > 0 ? -LINE_HEIGHT : LINE_HEIGHT;
+
+    // 延迟一帧触发滚动动画，让淡出先开始
+    fadeTimer = setTimeout(function () {
+      if (!lrcStage || !lrcLines[0]) return;
+
+      // 第二步：滚动 + 滚动完成后更新文字并淡入新歌词
+      lrcStage.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      lrcStage.style.transform = 'translateY(' + offset + 'px)';
+
+      scrollTimer = setTimeout(function () {
+        if (!lrcStage || !lrcLines[0]) return;
+        lrcStage.style.transition = 'none';
+        lrcStage.style.transform = 'translateY(0)';
+        lrcLines[0].textContent = prevText;
+        lrcLines[1].textContent = currText;
+        lrcLines[2].textContent = nextText;
+        // 淡入新歌词 — 加回高亮，颜色逐渐变深
+        lrcLines[1].classList.add('lrc-current');
+        lrcLines[0].classList.remove('lrc-current');
+        lrcLines[2].classList.remove('lrc-current');
+        scrollTimer = null;
+      }, 400);
+    }, 100);
+  }
+
+  // 显示"暂无歌词"
+  function showNoLyric() {
+    if (!lrcStage || !lrcLines[1]) return;
+    if (scrollTimer) {
+      clearTimeout(scrollTimer);
+      scrollTimer = null;
+    }
+    if (fadeTimer) {
+      clearTimeout(fadeTimer);
+      fadeTimer = null;
+    }
+    lrcStage.style.transition = 'none';
+    lrcStage.style.transform = 'translateY(0)';
+    lrcLines[0].textContent = '';
+    lrcLines[1].textContent = '♪ 暂无歌词 ♪';
+    lrcLines[1].classList.add('lrc-current');
+    lrcLines[1].classList.remove('lrc-empty');
+    lrcLines[2].textContent = '';
+    lrcLines[0].classList.remove('lrc-current');
+    lrcLines[2].classList.remove('lrc-current');
   }
 
   function clearLyricLines() {
-    for (var i = 0; i < fadeTimers.length; i++) {
-      clearTimeout(fadeTimers[i]);
+    if (scrollTimer) {
+      clearTimeout(scrollTimer);
+      scrollTimer = null;
     }
-    fadeTimers = [];
-    for (var i = 0; i < lyricLines.length; i++) {
-      if (lyricLines[i]) lyricLines[i].textContent = '';
+    if (fadeTimer) {
+      clearTimeout(fadeTimer);
+      fadeTimer = null;
+    }
+    if (lrcStage) {
+      lrcStage.style.transition = 'none';
+      lrcStage.style.transform = 'translateY(0)';
+    }
+    if (lrcLines[0]) {
+      lrcLines[0].textContent = '';
+      lrcLines[0].classList.remove('lrc-current');
+    }
+    if (lrcLines[1]) {
+      lrcLines[1].textContent = '';
+      lrcLines[1].classList.remove('lrc-current');
+    }
+    if (lrcLines[2]) {
+      lrcLines[2].textContent = '';
+      lrcLines[2].classList.remove('lrc-current');
     }
     parsedLines = [];
     lastIdx = -1;
@@ -371,23 +409,16 @@
   }
 
   // ===== 工具 =====
+  function setInfo(title, artist) {
+    if (titleEl) titleEl.textContent = title;
+    if (artistEl) artistEl.textContent = artist;
+  }
+
   function formatTime(seconds) {
     if (isNaN(seconds)) return '00:00';
     var m = Math.floor(seconds / 60);
     var s = Math.floor(seconds % 60);
     return (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
-  }
-
-  // ===== 获取歌词行 DOM =====
-  var lyricsContainer = document.getElementById('musicLyrics');
-  if (lyricsContainer) {
-    lyricLines = [
-      lyricsContainer.querySelector('.lrc-prev2'),
-      lyricsContainer.querySelector('.lrc-prev1'),
-      lyricsContainer.querySelector('.lrc-current'),
-      lyricsContainer.querySelector('.lrc-next1'),
-      lyricsContainer.querySelector('.lrc-next2')
-    ];
   }
 
   // ===== 事件绑定 =====

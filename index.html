@@ -70,7 +70,7 @@
 				</div>
 				<div class="music-controls">
 					<button class="music-btn" id="musicPrev" aria-label="上一首">
-						<svg viewBox="0 0 1024 1024"><path d="M256 512h85.333333v256H256V512z m597.333333 256h-85.333333V298.666667L341.333333 512 768 725.333333V768z" fill="currentColor"></path></svg>
+						<svg viewBox="0 0 1024 1024"><path d="M682.666667 256h85.333333v512h-85.333333V256z m-512 256L682.666667 298.666667v426.666666L170.666667 512z" fill="currentColor"></path></svg>
 					</button>
 					<button class="music-btn music-btn-play" id="musicPlay" aria-label="播放">
 						<svg viewBox="0 0 1024 1024"><path d="M256 170.666667v682.666666l512-341.333333L256 170.666667z" fill="currentColor"></path></svg>
@@ -85,11 +85,11 @@
 					<span class="music-time" id="musicDurTime">00:00</span>
 				</div>
 				<div class="music-lyrics" id="musicLyrics">
-					<p class="lyric-line lrc-prev2"></p>
-					<p class="lyric-line lrc-prev1"></p>
-					<p class="lyric-line lrc-current">♪ 暂无歌词 ♪</p>
-					<p class="lyric-line lrc-next1"></p>
-					<p class="lyric-line lrc-next2"></p>
+					<div class="lrc-stage" id="lrcStage">
+						<p class="lyric-line lrc-line-0"></p>
+						<p class="lyric-line lrc-line-1 lrc-current">♪ 暂无歌词 ♪</p>
+						<p class="lyric-line lrc-line-2"></p>
+					</div>
 				</div>
 			</div>
 			<div class="left-div left-time">
