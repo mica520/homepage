@@ -786,8 +786,7 @@ html[data-theme="Dark"] .searchEngineOption.active {
 
 footer {
     position: absolute;
-    padding: 10px;
-    text-align: center;
+    padding: 12px 2px;
     width: 100%;
     backdrop-filter: blur(var(--card_filter));
     -webkit-backdrop-filter: blur(var(--card_filter));
@@ -795,6 +794,27 @@ footer {
     color: var(--footer_text_color);
     font-size: 13px;
     bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.footer-text {
+    white-space: nowrap;
+}
+
+.footer-icp {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.footer-icp img {
+    height: 1em;
+    vertical-align: middle;
+    display: inline-block;
 }
 
 @media (min-width: 800px) {
