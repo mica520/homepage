@@ -93,13 +93,14 @@
   }
 
   // ===== 加载歌曲 =====
-  function loadSong(index) {
+  function loadSong(index, autoplay) {
     if (!playlist.length) return;
     var song = playlist[index];
     if (!song) return;
 
     loadToken += 1;
     var currentLoadToken = loadToken;
+    var shouldAutoPlay = !!autoplay || isPlaying;
     isPlaying = false;
     updatePlayState();
 
@@ -168,7 +169,7 @@
       });
 
       currentAudio.addEventListener('canplay', function () {
-        if (!isCurrent()) return;
+        if (!isCurrent() || !shouldAutoPlay) return;
         currentAudio.play().then(function () {
           if (!isCurrent()) return;
           isPlaying = true;
@@ -186,7 +187,7 @@
   // ===== 播放/暂停 =====
   function togglePlay() {
     if (!audio) {
-      if (playlist.length) loadSong(currentIndex);
+      if (playlist.length) loadSong(currentIndex, true);
       return;
     }
     if (isPlaying) {
@@ -219,7 +220,7 @@
   function prevSong() {
     if (!playlist.length) return;
     currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
-    loadSong(currentIndex);
+    loadSong(currentIndex, isPlaying);
   }
 
   function getRandomIndex(excludeIndex) {
@@ -234,7 +235,7 @@
   function nextSong() {
     if (!playlist.length) return;
     currentIndex = getRandomIndex(currentIndex);
-    loadSong(currentIndex);
+    loadSong(currentIndex, isPlaying);
   }
 
   // ===== 进度条 =====
