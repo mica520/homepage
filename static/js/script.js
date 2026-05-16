@@ -1,4 +1,4 @@
-console.log('%cCopyright © 2024 yozz.net and 2026 mica',
+console.log('%cCopyright © 2024 zyyo.net and 2026 mica',
     'background-color: #37229f; color: white; font-size: 24px; font-weight: bold; padding: 10px;'
 );
 console.log('%c   /\\_/\\', 'color: #8B4513; font-size: 20px;');
